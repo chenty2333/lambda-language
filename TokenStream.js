@@ -4,7 +4,7 @@
 // 另一类是read_XXX, 用来返回特定类型的token. punc和op处理简单, 所以并没有单独的read_punc()和read_op()函数, 而是直接在read_next()中处理.
 function TokenStream(input) {
   var current = null;
-  var keywords = "if then else lambda λ true false";
+  var keywords = " if then else lambda λ true false ";
   return {
     // next返回下一个token, 如果没有token了返回null.
     // peek返回下一个token, 但不消耗它, 如果没有token了返回null.
@@ -25,7 +25,7 @@ function TokenStream(input) {
   }
   function is_id_start(ch) {
     // 判断字符是否是变量或关键词的起始字符. 这里不做判断.
-    return /[a-Z]/i.test(ch);
+    return /[a-zλ_]/i.test(ch);
   }
   function is_id(ch) {
     // 判断字符时候是变量
@@ -116,12 +116,12 @@ function TokenStream(input) {
     }
     if (ch == '"') return read_string();
     if (is_digit(ch)) return read_number();
-    if (is_id_start()) return read_ident();
+    if (is_id_start(ch)) return read_ident();
     if (is_punc(ch)) return {
       type: "punc",
       value: input.next()
     };
-    if (is_op_char()) return {
+    if (is_op_char(ch)) return {
       type: "op",
       value: read_while(is_op_char)
     };

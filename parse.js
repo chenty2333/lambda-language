@@ -8,6 +8,8 @@ function parse(input) {
     "+": 10, "-": 10,
     "*": 20, "/": 20, "%": 20,
   };
+  // parse_toplevel()是parse的入口函数, 负责解析整个程序.
+  // 它会调用parse_expression()来解析表达式, 最终返回一个包含所有表达式的对象.
   return parse_toplevel();
   // 所有is_XXX系列函数都返回一个token. 如果没有传入参数, 则返回peek()的结果. 如果传入了参数, 则判断peek()的token是否符合要求, 如果符合则返回peek()的token, 否则返回false.
   function is_punc(ch) {
@@ -24,18 +26,18 @@ function parse(input) {
   }
   function skip_punc(ch) {
     if (is_punc(ch)) input.next();
-    else input.croak("Excepting punction: \"" + ch + "\"");
+    else input.croak("Expecting punctuation: \"" + ch + "\"");
   }
   function skip_kw(kw) {
     if (is_kw(kw)) input.next();
-    else input.croak("Excepting punction: \"" + kw + "\"");
+    else input.croak("Expecting keyword: \"" + kw + "\"");
   }
   function skip_op(op) {
     if (is_op(op)) input.next();
-    else input.croak("Excepting punction: \"" + op + "\"");
+    else input.croak("Expecting operator: \"" + op + "\"");
   }
   function unexpected() {
-    input.croak("unexpected token: " + JSON.stringify(input.peek()));
+    input.croak("Unexpected token: " + JSON.stringify(input.peek()));
   }
   function maybe_binary(left, my_prec) {
     // 先判断是否是operator
@@ -80,7 +82,7 @@ function parse(input) {
     return {
       type: "call",
       func: func,
-      args: delimited("(", ")", ",", patse_expression),
+      args: delimited("(", ")", ",", parse_expression),
     };
   }
   function parse_varname() {

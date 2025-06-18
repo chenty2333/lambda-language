@@ -2,7 +2,7 @@ function InputStream(input) {
   var pos = 0, line = 1, col = 0;
   return {
     next: next,
-    peeek: peek,
+    peek: peek,
     eof: eof,
     croak: croak,
   };
