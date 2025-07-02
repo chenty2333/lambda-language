@@ -1,15 +1,15 @@
-// TokenStream接受一个InputStream对象作为参数.
-// TokenStream从输入流中读取token, 进行词法分析.
-// TokenStream的实现包含了两类函数, 一类是is_XXX, 用来判断字符是否符合某种类型, 返回boolean类型, 作为read_while()的参数, 参与read_XXX()的过程中.
-// 另一类是read_XXX, 用来返回特定类型的token. punc和op处理简单, 所以并没有单独的read_punc()和read_op()函数, 而是直接在read_next()中处理.
+// TokenStream 接受一个 InputStream 对象作为参数.
+// TokenStream 从输入流中读取 token, 进行词法分析.
+// TokenStream 的实现包含了两类函数, 一类是 is_XXX, 用来判断字符是否符合某种类型, 返回 boolean 类型, 作为 read_while() 的参数, 参与 read_XXX() 的过程中.
+// 另一类是 read_XXX, 用来返回特定类型的 token. punc 和 op 处理简单, 所以并没有单独的 read_punc() 和 read_op() 函数, 而是直接在 read_next() 中处理.
 function TokenStream(input) {
   var current = null;
   var keywords = " if then else lambda λ true false ";
   return {
-    // next返回下一个token, 如果没有token了返回null.
-    // peek返回下一个token, 但不消耗它, 如果没有token了返回null.
-    // eof判断是否到达文件末尾.
-    // croak抛出错误, 并显示行号和列号.
+    // next 返回下一个 token, 如果没有 token 了返回 null.
+    // peek 返回下一个 token, 但不消耗它, 如果没有 token 了返回 null.
+    // eof 判断是否到达文件末尾.
+    // croak 抛出错误, 并显示行号和列号.
     next: next,
     peek: peek,
     eof: eof,
@@ -44,7 +44,7 @@ function TokenStream(input) {
     return " \t\n".indexOf(ch) >= 0;
   }
   function read_while(predicate) {
-    // 很巧妙, 传递进来一个predicate方法名, 通过这个方法判断peek()是否成立, 成立就接着读下去, 然后用next()读取并弹出当前字符, current指向下一个.
+    // 很巧妙, 传递进来一个 predicate 方法名, 通过这个方法判断 peek() 是否成立, 成立就接着读下去, 然后用 next() 读取并弹出当前字符, current 指向下一个.
     var str = "";
     while (!input.eof() && predicate(input.peek()))
       str += input.next();
@@ -52,8 +52,8 @@ function TokenStream(input) {
   }
   function read_number() {
     var has_dot = false;
-    // 用了一个匿名方法传递给read_while(), 和lisp太像啦! 当遇到两个dot的时候直接把false返回给read_while(), parseFloat是JS内置函数, 把字符串转化成数字.
-    var number = read_while(function(ch){
+    // 用了一个匿名方法传递给 read_while(), 和 lisp 太像啦! 当遇到两个 dot 的时候直接把 false 返回给 read_while(), parseFloat 是 JS 内置函数, 把字符串转化成数字.
+    var number = read_while(function (ch) {
       if (ch == ".") {
         if (has_dot) return false;
         has_dot = true;
@@ -64,7 +64,7 @@ function TokenStream(input) {
     return { type: "num", value: parseFloat(number) };
   }
   function read_ident() {
-    // is_id并不区分变量和关键词, 在return的时候通过is_keyword()来填写是kw还是var.
+    // is_id 并不区分变量和关键词, 在 return 的时候通过 is_keyword() 来填写是 kw 还是 var.
     var id = read_while(is_id);
     return {
       type: is_keyword(id) ? "kw" : "var",
@@ -72,9 +72,9 @@ function TokenStream(input) {
     };
   }
   function read_escaped(end) {
-    // 很妙的一个函数, 接受的是结束字符, 比如", read_next()中用这个函数处理字符串的情况.
-    // 当escaped是true的时候, 说明上一个字符是转义符, 直接把当前字符添加到字符串中, 同时把escaped标志清零. 
-    // 如果遇到了\\就把标志设为true.
+    // 很妙的一个函数, 接受的是结束字符, 比如", read_next() 中用这个函数处理字符串的情况.
+    // 当 escaped 是 true 的时候, 说明上一个字符是转义符, 直接把当前字符添加到字符串中, 同时把 escaped 标志清零.
+    // 如果遇到了 \\ 就把标志设为 true.
     // 如果当前字符是结束字符, 跳出循环.
     var escaped = false, str = "";
     input.next();
@@ -97,16 +97,16 @@ function TokenStream(input) {
     return { type: "str", value: read_escaped('"') };
   }
   function skip_comment() {
-    // 读取到#号, 说明是注释, 通过read_while()读取到换行符为止, 然后next()跳过换行符.
+    // 读取到 #号, 说明是注释, 通过 read_while() 读取到换行符为止, 然后 next() 跳过换行符.
     read_while(function (ch) { return ch != "\n" });
     input.next();
   }
   function read_next() {
-    // 读取下一个token, 根据不同条件, 使用不同的处理函数.
+    // 读取下一个 token, 根据不同条件, 使用不同的处理函数.
     // 先跳过空白符.
     // 再判断是否是文件末尾.
     // 能看出不同情况的优先级, 注释 > 字符串 > 数字 > 变量
-    // 这里用的peek()是input的方法, 而不是TokenStream的方法, 用input.peek()是用来查看下一个字符的, 而不是下一个token.
+    // 这里用的 peek() 是 input 的方法, 而不是 TokenStream 的方法, 用 input.peek() 是用来查看下一个字符的, 而不是下一个 token.
     read_while(is_whitespace);
     if (input.eof()) return null;
     var ch = input.peek();
@@ -128,8 +128,8 @@ function TokenStream(input) {
     input.croak("Can't handle character: " + ch);
   }
   function peek() {
-    // current作为缓存, 保存读到的token, 如果没有调用next()把current置为null, 就不会重新读取token并设置current.
-    // 这是TokenStream的peek()方法, 与InputStream的peek()不同.
+    // current 作为缓存, 保存读到的 token, 如果没有调用 next() 把 current 置为 null, 就不会重新读取 token 并设置 current.
+    // 这是 TokenStream 的 peek() 方法, 与 InputStream 的 peek() 不同.
     return current || (current = read_next());
   }
   function next() {
