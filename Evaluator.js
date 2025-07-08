@@ -48,6 +48,7 @@ Environment.prototype = {
 };
 
 function evaluate(exp, env) {
+  // evaluate() 就是求值器的入口函数, 接受上一步 parse() 得到的 AST, 因为 AST 起始肯定是 prog 节点, 所以 prog 中的对每个结点做 forEach() 求值操作.
   switch (exp.type) {
     case "num":
     case "str":
@@ -86,6 +87,12 @@ function evaluate(exp, env) {
       return func.apply(null, exp.args.map(function (arg) {
         return evaluate(arg, env);
       }));
+    case "let":
+      exp.vars.forEach(function (v) {
+        var scope = env.extend();
+        scope.def(v.name, v.def ? evaluate(v.def, env) : false);
+        env = scope;
+      });
     default:
       throw new Error("I don't know how to evaluate " + exp.type);
   }
@@ -121,6 +128,11 @@ function apply_op(op, a, b) {
 }
 function make_lambda(env, exp) {
   // 和前面 Parser 里面的 parse_lambda() 对应, exp.vars 保存的是需要的变量名, exp.body 保存 procedure 主体.
+  if (exp.name) {
+    // 如果 而 exp.name 存在, 那就定义一个新变量名为 exp.name, 值为 lambda.
+    env = env.extend();
+    env.def(exp.name, lambda);
+  }
   function lambda() {
     var names = exp.vars;
     var scope = env.extend();

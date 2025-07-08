@@ -4,7 +4,7 @@
 // 另一类是 read_XXX, 用来返回特定类型的 token. punc 和 op 处理简单, 所以并没有单独的 read_punc() 和 read_op() 函数, 而是直接在 read_next() 中处理.
 function TokenStream(input) {
   var current = null;
-  var keywords = " if then else lambda λ true false ";
+  var keywords = " let if then else lambda λ true false ";
   return {
     // next 返回下一个 token, 如果没有 token 了返回 null.
     // peek 返回下一个 token, 但不消耗它, 如果没有 token 了返回 null.
@@ -16,7 +16,7 @@ function TokenStream(input) {
     croak: input.croak
   };
   function is_keyword(x) {
-    // 通过在关键字字符串两端添加空格来避免匹配子字符串.
+    // 通过在关键字字符串两端添加空格来避免匹配子字符串. 比如 "or" 匹配到 "for".
     return keywords.indexOf(" " + x + " ") >= 0;
   }
   function is_digit(ch) {

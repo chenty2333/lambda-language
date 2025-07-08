@@ -111,9 +111,41 @@ function parse(input) {
     // 封装一层 delimited(), 专用于解析 lambda 表达式, 返回一个"lambda"类型的对象.
     return {
       type: "lambda",
+      name: input.peek().type == "var" ? input.next().value : null,
       vars: delimited("(", ")", ",", parse_varname),
       body: parse_expression()
     };
+  }
+  function parse_let() {
+    // let 操作被分为两种可能, 一种是单纯的定义变量, 被解释为 let 节点. 而使用 let 定义函数则被解释为 call 节点.
+    skip_kw("let");
+    if (input.peek().type == "var") {
+      var name = input.next().value;
+      var defs = delimited("(", ")", ",", parse_vardef);
+      return {
+        type: "call",
+        func: {
+          type: "lambda",
+          name: name,
+          vars: defs.map(function (def) { return def.name }),
+          body: parse_expression(),
+        },
+        args: defs.map(function (def) { return def.def || false })
+      };
+    }
+    return {
+      type: "let",
+      vars: delimited("(", ")", ",", parse_vardef),
+      body: parse_expression(),
+    };
+  }
+  function parse_vardef() {
+    var name = parse_varname(), def;
+    if (is_op("=")) {
+      input.next();
+      def = parse_expression();
+    }
+    return { name: name, def: def };
   }
   function parse_bool() {
     return {
@@ -129,6 +161,7 @@ function parse(input) {
     return is_punc("(") ? parse_call(expr) : expr;
   }
   function parse_atom() {
+    // parse_atom() 是一个调度器.
     // 这里的递归调用很有意思, 如果是一个最小单元, 比如数字, 字符串, 变量名, 则直接返回这个token.
     // 如果是"()", "{}","if", "true", "false", "lambda"等, 则会调用对应的解析函数.
     return maybe_call(function () {
@@ -139,6 +172,7 @@ function parse(input) {
         return exp;
       }
       if (is_punc("{")) return parse_prog();
+      if (is_kw("let")) return parse_let();
       if (is_kw("if")) return parse_if();
       if (is_kw("true") || is_kw("false")) return parse_bool();
       if (is_kw("lambda") || is_kw("λ")) {
